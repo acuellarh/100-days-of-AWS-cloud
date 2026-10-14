@@ -1,0 +1,48 @@
+# Crear un Key Pair en AWS (KodeKloud)
+
+**Tarea:** crear un key pair llamado `nautilus-kp` de tipo `rsa`.
+
+## ¿Qué es un Key Pair?
+
+Sirve para conectarte por SSH a instancias EC2 sin contraseña.
+
+- **Clave pública:** la guarda AWS y la coloca en el servidor (`~/.ssh/authorized_keys`).
+- **Clave privada:** se descarga **una sola vez** (`.pem`). AWS no la guarda; si se pierde, no se recupera.
+
+**Tipos:**
+- **RSA:** clásico, compatible con Linux y Windows.
+- **ED25519:** más moderno, no sirve para Windows.
+
+## Opción 1: Consola web
+
+1. Verifica la **región** (normalmente `us-east-1` en KodeKloud).
+2. **EC2** → **Network & Security** → **Key Pairs** → **Create key pair**.
+3. Name: `nautilus-kp` · Type: `RSA` · Format: `.pem`
+4. **Create key pair** (se descarga el `.pem`).
+
+## Opción 2: AWS CLI
+
+```bash
+# Crear y guardar la clave privada
+aws ec2 create-key-pair \
+  --key-name nautilus-kp \
+  --key-type rsa \
+  --query 'KeyMaterial' \
+  --output text > nautilus-kp.pem
+
+# Proteger el archivo (SSH lo exige)
+chmod 400 nautilus-kp.pem
+
+# Verificar
+aws ec2 describe-key-pairs --key-names nautilus-kp
+```
+
+Debe mostrar `"KeyName": "nautilus-kp"` y `"KeyType": "rsa"`.
+
+## Uso posterior
+
+Al lanzar una EC2 con este key pair:
+
+```bash
+ssh -i nautilus-kp.pem ec2-user@<IP-pública>
+```
